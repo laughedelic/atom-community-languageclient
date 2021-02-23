@@ -7,7 +7,15 @@ import * as ac from "atom/autocomplete-plus"
 import { expect } from "chai"
 import { createSpyConnection, createFakeEditor } from "../helpers.js"
 import { TextSuggestion, SnippetSuggestion } from "../../lib/types/autocomplete-extended"
-import { CompletionItem, MarkupContent, InsertTextFormat, TextEdit, Command } from "../../lib/languageclient"
+import {
+  CompletionItem,
+  MarkupContent,
+  InsertTextFormat,
+  TextEdit,
+  Command,
+  Range,
+  InsertReplaceEdit,
+} from "../../lib/languageclient"
 
 function createRequest({
   prefix = "",
@@ -40,7 +48,7 @@ function createCompletionItem(
     filterText?: string
     insertText?: string
     insertTextFormat?: InsertTextFormat
-    textEdit?: TextEdit
+    textEdit?: TextEdit | InsertReplaceEdit
     additionalTextEdits?: TextEdit[]
     commitCharacters?: string[]
     command?: Command
@@ -90,6 +98,21 @@ describe("AutoCompleteAdapter", () => {
       documentation: "should not appear",
       sortText: "zzz",
     }),
+    createCompletionItem("textToBeEdited1", {
+      kind: ls.CompletionItemKind.Snippet,
+      textEdit: {
+        newText: "newText1",
+        range: Range.create({ line: 1, character: 1 }, { line: 1, character: 10 }),
+      },
+    }),
+    createCompletionItem("textToBeEdited2", {
+      kind: ls.CompletionItemKind.Snippet,
+      textEdit: {
+        newText: "newText2",
+        replace: Range.create({ line: 1, character: 1 }, { line: 1, character: 10 }),
+        insert: Range.create({ line: 1, character: 1 }, { line: 1, character: 10 }),
+      },
+    }),
   ]
 
   const request = createRequest({ prefix: "lab" })
@@ -100,10 +123,17 @@ describe("AutoCompleteAdapter", () => {
 
     async function getResults(
       items: CompletionItem[],
-      requestParams: { prefix?: string; point?: Point }
+      requestParams: { prefix?: string; point?: Point },
+      shouldReplace: boolean = false
     ): Promise<ac.AnySuggestion[]> {
       sinon.stub(server.connection, "completion").resolves(items)
-      return autoCompleteAdapter.getSuggestions(server, createRequest(requestParams))
+      return autoCompleteAdapter.getSuggestions(
+        server,
+        createRequest(requestParams),
+        undefined,
+        undefined,
+        shouldReplace
+      )
     }
 
     beforeEach(() => {

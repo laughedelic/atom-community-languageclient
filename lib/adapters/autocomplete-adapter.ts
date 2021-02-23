@@ -461,7 +461,7 @@ export default class AutocompleteAdapter {
    * Public: Applies the textEdit part of a language server protocol CompletionItem to an
    * AutoComplete+ Suggestion via the replacementPrefix and text properties.
    *
-   * @param textEdit A {TextEdit} from a CompletionItem to apply.
+   * @param textEdit A {TextEdit | InsertReplaceEdi} from a CompletionItem to apply.
    * @param editor An Atom {TextEditor} used to obtain the necessary text replacement.
    * @param suggestion An {atom$AutocompleteSuggestion} to set the replacementPrefix and text properties of.
    * @param shouldReplace The behavior of suggestion acceptance (see {ShouldReplace}).
